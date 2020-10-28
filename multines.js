@@ -10,9 +10,17 @@ const kDeliver = Symbol.for('deliver')
 function buildDeliver (socket, topic) {
   return async function deliver (message, done) {
     if (topic === message.topic) {
-      await socket.publish('/' + topic, message.body)
+      try {
+        await socket.publish('/' + topic, message.body)
+      } catch (error) {
+        console.log(`There was an error delivering the message: ${error}`)
+      }
     } else {
-      await socket.publish('/' + topic, message)
+      try {
+        await socket.publish('/' + topic, message)
+      } catch (error) {
+        console.log(`There was an error delivering the message: ${error}`)
+      }
     }
   }
 }
@@ -62,7 +70,11 @@ async function register (server, options) {
       }
 
       await wrapSubscribe(socket, path, params)
-      await mq.on(topic, deliverMap[path])
+      try {
+        await mq.on(topic, deliverMap[path])
+      } catch (error) {
+        console.log(`There was an error delivering the message: ${error}`)
+      }
     }
 
     options.onUnsubscribe = async (socket, path, params) => {
